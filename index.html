@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>SpeedLab — ইন্টারনেট স্পিড মিটার</title>
+<meta name="description" content="রিয়েল-টাইম ইন্টারনেট স্পিড টেস্ট — ডাউনলোড, আপলোড, পিং ও জিটার পরিমাপ করুন">
+<meta name="theme-color" content="#0F172A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SpeedLab">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="haptic-flash" id="hFlash"></div>
+<div class="haptic-label" id="hLabel"></div>
+<div class="toast" id="toast"></div>
+
+<div id="app">
+  <div class="orb1" id="orb1"></div>
+  <div class="orb2"></div>
+  <div class="orb3"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">Speed<span>Lab</span></div>
+    <div class="hdr-right">
+      <div class="unit-wrap" id="unitWrap" title="Toggle Mbps / MB/s">
+        <span class="unit-lbl on" id="uLblMbps">Mbps</span>
+        <div class="unit-track"><div class="unit-thumb" id="uThumb"></div></div>
+        <span class="unit-lbl" id="uLblMBs">MB/s</span>
+      </div>
+      <button class="icon-btn" id="installBtn" title="অ্যাপ ইনস্টল করুন" style="display:none">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" data-screen="test">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>স্পিড টেস্ট</span>
+    </button>
+    <button class="nav-btn" data-screen="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>ইতিহাস</span>
+    </button>
+    <button class="nav-btn" data-screen="info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>তথ্য</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ SPEED TEST SCREEN ═══════════════ -->
+  <div class="screen active" id="screen-test">
+    <div class="screen-inner">
+
+      <div class="srv-pill" id="srvPill">
+        <div class="sdot" id="srvDot"></div>
+        <div class="srv-info">
+          <div class="srv-name" id="srvName">সার্ভার সংযোগ পরীক্ষা হচ্ছে…</div>
+          <div class="srv-sub" id="srvSub">অনুগ্রহ করে অপেক্ষা করুন</div>
+        </div>
+        <button class="srv-refresh" id="srvRefresh" title="রিফ্রেশ">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+
+      <div class="main-grid">
+        <div class="gauge-section idle" id="gaugeSection">
+          <div class="gauge-wrap">
+            <div class="gauge-glass"></div>
+            <canvas id="gaugeCanvas" width="240" height="148"></canvas>
+            <div class="speed-center">
+              <div class="speed-num" id="speedNum">0.0</div>
+              <div class="speed-unit" id="speedUnit">MBPS</div>
+            </div>
+            <div class="gauge-play-overlay" id="gaugePlayOverlay">
+              <button class="start-btn" id="startBtn">
+                <div class="ripple"></div>
+                <div class="ripple" style="animation-delay:.8s"></div>
+                <div class="s-outer" id="sOuter"></div>
+                <div class="s-mid"></div>
+                <div class="s-inner">
+                  <div class="s-icon" id="btnIcon">▶</div>
+                  <div class="s-lbl" id="btnLbl">শুরু</div>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div class="phase-badge" id="phaseBadge">প্রস্তুত</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card ping" id="sc-ping">
+            <div class="stat-icon" style="color:var(--green)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="stat-val c-green" id="vPing">—</div>
+            <div class="stat-lbl">পিং</div>
+            <div class="stat-unit">ms</div>
+          </div>
+          <div class="stat-card dl" id="sc-dl">
+            <div class="stat-icon" style="color:var(--cyan)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+            </div>
+            <div class="stat-val c-cyan" id="vDl">—</div>
+            <div class="stat-lbl">ডাউনলোড</div>
+            <div class="stat-unit" id="dlUnit">Mbps</div>
+          </div>
+          <div class="stat-card ul" id="sc-ul">
+            <div class="stat-icon" style="color:var(--purple)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+            </div>
+            <div class="stat-val c-purple" id="vUl">—</div>
+            <div class="stat-lbl">আপলোড</div>
+            <div class="stat-unit" id="ulUnit">Mbps</div>
+          </div>
+        </div>
+
+        <div class="wave-card" id="waveCard">
+          <canvas id="waveCanvas" height="32"></canvas>
+        </div>
+
+        <div class="bottom-row">
+          <div class="isp-card" id="ispCard">
+            <div class="isp-row">
+              <div class="isp-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="2" y="9" width="20" height="12" rx="2"/><path d="M6 9V7a6 6 0 0 1 12 0v2"/><circle cx="12" cy="15" r="1.5"/></svg>
+              </div>
+              <div class="isp-body">
+                <div class="isp-name" id="ispName">সনাক্ত করা হচ্ছে…</div>
+                <div class="isp-ip" id="ispIp">—</div>
+              </div>
+              <div class="isp-side">
+                <div class="isp-badge" id="ispCountry">—</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="share-btn-mini" id="shareBtn" disabled title="ফলাফল শেয়ার করুন">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>শেয়ার</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════ HISTORY SCREEN ═══════════════ -->
+  <div class="screen" id="screen-history">
+    <div class="screen-inner">
+      <div class="screen-title">
+        পরীক্ষার ইতিহাস
+        <button class="clear-btn" id="clearHistBtn">সব মুছুন</button>
+      </div>
+      <div id="histStats" class="hist-stats" style="display:none">
+        <div class="hist-stat-card">
+          <div class="hist-stat-lbl">গড় ডাউনলোড</div>
+          <div class="hist-stat-val c-cyan" id="avgDl">—</div>
+        </div>
+        <div class="hist-stat-card">
+          <div class="hist-stat-lbl">গড় আপলোড</div>
+          <div class="hist-stat-val c-purple" id="avgUl">—</div>
+        </div>
+        <div class="hist-stat-card">
+          <div class="hist-stat-lbl">মোট টেস্ট</div>
+          <div class="hist-stat-val" id="totalTests" style="color:var(--text)">—</div>
+        </div>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ INFO SCREEN ═══════════════ -->
+  <div class="screen" id="screen-info">
+    <div class="screen-inner">
+      <div class="screen-title">তথ্য ও সেটিংস</div>
+
+      <div class="info-card">
+        <div class="info-card-hdr">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          এই টেস্ট কীভাবে কাজ করে
+        </div>
+        <p class="info-text">SpeedLab Cloudflare-এর গ্লোবাল নেটওয়ার্ক ব্যবহার করে প্রকৃত ফাইল ডাউনলোড ও আপলোড করে real-time স্পিড পরিমাপ করে। কোনো সিমুলেশন বা ডেমো ডেটা ব্যবহার করা হয় না — প্রতিটি সংখ্যা আপনার আসল নেটওয়ার্ক কানেকশন থেকে পাওয়া।</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-hdr">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          যা পরিমাপ করা হয়
+        </div>
+        <ul class="info-list">
+          <li><strong>পিং (Ping):</strong> সার্ভারে একটি ছোট রিকোয়েস্ট পাঠিয়ে রাউন্ড-ট্রিপ টাইম মাপা হয়</li>
+          <li><strong>জিটার (Jitter):</strong> একাধিক পিং স্যাম্পলের মধ্যে সময়ের তারতম্য</li>
+          <li><strong>ডাউনলোড:</strong> Cloudflare সার্ভার থেকে প্রকৃত ফাইল ডাউনলোড করে গতি মাপা হয়</li>
+          <li><strong>আপলোড:</strong> আপনার ডিভাইস থেকে সার্ভারে প্রকৃত ডেটা পাঠিয়ে গতি মাপা হয়</li>
+          <li><strong>IP ও ISP:</strong> পাবলিক API থেকে আপনার বর্তমান নেটওয়ার্কের তথ্য আনা হয়</li>
+        </ul>
+      </div>
+
+      <div class="info-card warn-card">
+        <div class="info-card-hdr">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          সীমাবদ্ধতা (Browser-ভিত্তিক অ্যাপ)
+        </div>
+        <p class="info-text">যেহেতু এটি একটি ব্রাউজার/PWA অ্যাপ, নিচের ফিচারগুলো অপারেটিং সিস্টেম-লেভেল পারমিশনের অভাবে সম্ভব নয় — এগুলোর জন্য একটি native Android/iOS অ্যাপ প্রয়োজন হবে:</p>
+        <ul class="info-list">
+          <li>স্ট্যাটাস বার নোটিফিকেশনে লাইভ স্পিড দেখানো</li>
+          <li>ব্যাকগ্রাউন্ডে চলমান মনিটরিং সার্ভিস</li>
+          <li>Wi-Fi বনাম মোবাইল ডেটা ব্যবহার ট্র্যাকিং</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-hdr">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          গোপনীয়তা
+        </div>
+        <p class="info-text">আপনার টেস্টের ইতিহাস শুধুমাত্র আপনার ডিভাইসে (LocalStorage) সংরক্ষিত থাকে — কোনো সার্ভারে পাঠানো বা সংরক্ষণ করা হয় না।</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-hdr">টেস্ট সার্ভার নির্বাচন</div>
+        <div class="server-select" id="serverSelect">
+          <button class="server-opt active" data-server="cloudflare">Cloudflare</button>
+        </div>
+        <p class="info-text" style="margin-top:8px">Cloudflare-এর নিকটতম এজ সার্ভার স্বয়ংক্রিয়ভাবে নির্বাচিত হয়।</p>
+      </div>
+
+      <div class="app-version">SpeedLab PWA · v1.0.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SHARE MODAL ═══════════════ -->
+<div class="modal-bg" id="shareModal">
+  <div class="share-card">
+    <div class="sc-top">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="sc-brand">Speed<span>Lab</span></div>
+          <div class="sc-date" id="scDate">—</div>
+        </div>
+        <div class="verified">
+          <div class="vdot"></div>
+          <span>যাচাইকৃত</span>
+        </div>
+      </div>
+    </div>
+    <div class="sc-speeds">
+      <div class="sc-spd-box dl">
+        <div class="sc-spd-lbl">DOWNLOAD</div>
+        <div class="sc-spd-val dl" id="scDl">—</div>
+        <div class="sc-spd-unit" id="scUnitDl">Mbps</div>
+      </div>
+      <div class="sc-spd-box ul">
+        <div class="sc-spd-lbl">UPLOAD</div>
+        <div class="sc-spd-val ul" id="scUl">—</div>
+        <div class="sc-spd-unit" id="scUnitUl">Mbps</div>
+      </div>
+    </div>
+    <div class="sc-meta">
+      <div class="sc-meta-item">
+        <div class="sc-meta-lbl">PING</div>
+        <div class="sc-meta-val" id="scPing" style="color:var(--green)">—</div>
+      </div>
+      <div class="sc-meta-item">
+        <div class="sc-meta-lbl">JITTER</div>
+        <div class="sc-meta-val" id="scJitter" style="color:var(--text2)">—</div>
+      </div>
+      <div class="sc-meta-item">
+        <div class="sc-meta-lbl">GRADE</div>
+        <div class="sc-meta-val" id="scGrade" style="color:var(--cyan)">—</div>
+      </div>
+    </div>
+    <div class="sc-isp" style="margin-top:12px">
+      <div class="sc-isp-dot"></div>
+      <div class="sc-isp-txt">ISP: <strong id="scIsp">—</strong> · <span id="scIpTxt">—</span></div>
+    </div>
+    <div class="sc-footer">
+      <span class="sc-tag">speedlab.app · #MySpeedTest</span>
+      <div class="sc-bar"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-close" id="modalCloseBtn">বন্ধ করুন</button>
+      <button class="modal-copy" id="copyBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        কপি করুন
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="speedtest.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
